@@ -1,10 +1,10 @@
-### gflags 简介
+## gflags 简介
 
 ref: https://gflags.github.io/gflags/
 
 gflags 是一个命令行标志库，用于解析命令行参数，旨在提供一种方便的方式来定义、解析和访问命令行参，可以定义各种类型的命令行标志，包括布尔值、整数、浮点数、字符串等。
 
-#### 使用示例
+### 使用示例
 
 ``` C++
 #include <gflags/gflags.h>
@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
 ./myprogram --name=Alice
 ```
 
-#### 常用接口
+### 常用接口
 
 1. `DEFINE_<type>(name, default_value, help)` 和 `DECLARE_<type>(name)`
 
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
 
      注意 `bool` 类型的标志可以用 `--<name>` 表示设置为 `true`，用 `--no<name>`表示 `false`，也可以使用 `--<name>=true/false`
 
-### gflags API
+## gflags API
 
 - gflags.h
 
@@ -143,7 +143,7 @@ int main(int argc, char* argv[]) {
 48. <macro> `DECLARE_VARIABLE(type, shorttype, name)`
 49. <macro>  `DECLARE_<type>(name)`, <type> 包括 bool, int32, uint32, int64, uint64, double, string.
 
-### gflags 源码实现
+## gflags 源码实现
 
 从 `DEFINE_<type>(name, val, txt)` 开始，除了 bool 和 string，其他类型都是直接调用 `DEFINE_VARIABLE`
 
@@ -164,7 +164,7 @@ int main(int argc, char* argv[]) {
    DEFINE_VARIABLE(double, D, name, val, txt)
 ```
 
-#### `DEFINE_VARIABLE` 实现
+### `DEFINE_VARIABLE` 实现
 
 ```C++
 #define DEFINE_VARIABLE(type, shorttype, name, value, help)             \
@@ -199,7 +199,7 @@ int main(int argc, char* argv[]) {
 >
 > 为了解决这个问题，上述代码使用了一个常量来初始化标志的初始值。通过将初始值定义为一个常量，它的值在编译时就可以确定并保持不变。这意味着在静态初始化阶段，编译器可以直接使用这个常量值来初始化标志，而无需等到程序运行时才进行初始化。这样做可以确保在程序开始执行之前，命令行标志的初始值已经正确地初始化。
 
-##### `FlagRegisterer`
+#### `FlagRegisterer`
 
 ```C++
 class GFLAGS_DLL_DECL FlagRegisterer {
@@ -266,7 +266,7 @@ void RegisterCommandLineFlag(const char* name,
 - `CommandLineFlag`：Flag 数据结构，能够表示一个完整的 Flag
 - `FlagRegistry`：Flag 注册表，有一个全局单例，用于 Flag 的注册和管理
 
-##### `FlagValue`
+#### `FlagValue`
 
 ```C++
 class FlagValue {
@@ -325,7 +325,7 @@ class FlagValue {
 - 成员变量：数字指针 `value_buffer_` ，数据类型 `type_`，数据是否被释放 `owns_value_`
 - `bool FlagValue::ParseFrom(const char* spec)`：解析 value 字符串，给 `*value_buffer_` 赋值
 
-##### `CommandLineFlag`
+#### `CommandLineFlag`
 
 ```C++
 class CommandLineFlag {
@@ -383,7 +383,7 @@ class CommandLineFlag {
 };
 ```
 
-##### `FlagRegistry`
+#### `FlagRegistry`
 
 ```C++
 class FlagRegistry {
@@ -479,7 +479,7 @@ class FlagRegistry {
 - `SetFlagLocked(CommandLineFlag* flag, const char* value, FlagSettingMode set_mode, string* msg)`：设置标志的值。根据给定的标志对象、值和设置模式，将标志的值设置为指定的值。如果成功设置标志的值，将在 `msg` 中指示新的标志值，并返回 `true`，否则，将在`msg`中指示错误，保持标志不变，并返回`false`。
 - `GlobalRegistry()`：返回全局注册表对象的单例
 
-#### `ParseCommandLineFlags` 实现
+### `ParseCommandLineFlags` 实现
 
 ```C++
 static uint32 ParseCommandLineFlagsInternal(int* argc, char*** argv,
@@ -526,7 +526,7 @@ uint32 ParseCommandLineFlags(int* argc, char*** argv, bool remove_flags) {
 - `parser.ParseNewCommandLineFlags(argc, argv, remove_flags)`：解析命令行
 - 后续都是一些验证和错误处理代码，暂时不细看
 
-##### `CommandLineFlagParser`
+#### `CommandLineFlagParser`
 
 ```C++
 class CommandLineFlagParser {
