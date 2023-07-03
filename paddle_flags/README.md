@@ -20,11 +20,12 @@ DEFINE_string(flagfile,   "", "load flags from file");
 
 #### 调研计划
 
-- [gflags 库调研](./gflags.md)，Paddle 中用了哪些 gflags 接口
+- [gflags 库调研](./gflags.md)
+- [Paddle 中现有的 gflags 用法](#paddle-中现有的-gflags-用法)
 - [Pytorch flags 库实现调研](./pytorch_flags.md)
 - [gflags 库源码实现](./gflags.md#gflags-源码实现)
 
-### Paddle 中用到的 gflags 用法
+### Paddle 中现有的 gflags 用法
 
 #### 用法统计
 
