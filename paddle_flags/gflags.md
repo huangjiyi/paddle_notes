@@ -75,73 +75,73 @@ int main(int argc, char* argv[]) {
 
 - gflags.h
 
-  `#include "gflags/gflags_declare.h"`
+`#include "gflags/gflags_declare.h"`
 
-  `namespace GFLAGS_NAMESPACE {`
+`namespace GFLAGS_NAMESPACE {`
 
-  1. <macro> `RegisterFlagValidator`，为一个 FLAG 注册验证器
-  2. <macro> `DEFINE_validator`，对 `RegisterFlagValidator` 进行了一层包装
-  3. <struct> `CommandLineFlagInfo`，用于存放单个命令行标志的信息结构体
-  4. <func> `void GetAllFlags(std::vector<CommandLineFlagInfo>* OUTPUT)`
-  5. <func> `void ShowUsageWithFlags(const char *argv0)`
-  6. <func> `void ShowUsageWithFlagsRestrict(const char *argv0, const char *restrict)`
-  7. <func> `std::string DescribeOneFlag(const CommandLineFlagInfo& flag)`
-  8. <func> `void SetArgv(int argc, const char** argv)`
-  9. <func> `const std::vector<std::string>& GetArgvs()`
-  10. <func> `const char* GetArgv()`
-  11. <func> `const char* GetArgv0()`
-  12. <func> `uint32 GetArgvSum()`
-  13. <func> `const char* ProgramInvocationName()`
-  14. <func> `const char* ProgramInvocationShortName()`
-  15. <func> `const char* ProgramUsage()`
-  16. <func> `const char* VersionString()`
-  17. <func> `bool GetCommandLineOption(const char* name, std::string* OUTPUT)`
-  18. <func> `bool GetCommandLineFlagInfo(const char* name, CommandLineFlagInfo* OUTPUT)`
-  19. <func> `CommandLineFlagInfo GetCommandLineFlagInfoOrDie(const char* name)`
-  20. <enum> `FlagSettingMode`
-  21. <func> `std::string SetCommandLineOption (const char* name, const char* value)`
-  22. <func> `std::string SetCommandLineOptionWithMode(const char*, const char*, FlagSettingMode)`
-  23. <class> `FlagSaver`
-  24. <func> `std::string CommandlineFlagsIntoString()`
-  25. <func> `bool ReadFlagsFromString(const std::string, const char*, bool)`
-  26. <func> `bool AppendFlagsIntoFile(const std::string& filename, const char* prog_name)`
-  27. <func> `bool ReadFromFlagsFile(const std::string, const char*, bool)`
-  28. <func> `<Type>FromEnv(const char *varname, <type> defval)` 
-  29. <func> `void SetUsageMessage(const std::string& usage)`
-  30. <func> `void SetVersionString(const std::string& version)`
-  31. <func> `uint32 ParseCommandLineFlags(int *argc, char*** argv, bool remove_flags)`
-  32. <func> `uint32 ParseCommandLineNonHelpFlags(int *argc, char*** argv, bool remove_flags)`
-  33. <func> `void HandleCommandLineHelpFlags()`
-  34. <func> `void AllowCommandLineReparsing()`
-  35. <func> `void ReparseCommandLineNonHelpFlags()`
-  36. <func> `void ShutDownCommandLineFlags()`
-  37. <class> `FlagRegisterer`
-  38. <macro> `GFLAGS_DECLARE_FLAG_REGISTERER_CTOR`
-  39. <data> `const char kStrippedFlagHelp[]`
+1. <macro> `RegisterFlagValidator`，为一个 FLAG 注册验证器
+2. <macro> `DEFINE_validator`，对 `RegisterFlagValidator` 进行了一层包装
+3. <struct> `CommandLineFlagInfo`，用于存放单个命令行标志的信息结构体
+4. <func> `void GetAllFlags(std::vector<CommandLineFlagInfo>* OUTPUT)`
+5. <func> `void ShowUsageWithFlags(const char *argv0)`
+6. <func> `void ShowUsageWithFlagsRestrict(const char *argv0, const char *restrict)`
+7. <func> `std::string DescribeOneFlag(const CommandLineFlagInfo& flag)`
+8. <func> `void SetArgv(int argc, const char** argv)`
+9. <func> `const std::vector<std::string>& GetArgvs()`
+10. <func> `const char* GetArgv()`
+11. <func> `const char* GetArgv0()`
+12. <func> `uint32 GetArgvSum()`
+13. <func> `const char* ProgramInvocationName()`
+14. <func> `const char* ProgramInvocationShortName()`
+15. <func> `const char* ProgramUsage()`
+16. <func> `const char* VersionString()`
+17. <func> `bool GetCommandLineOption(const char* name, std::string* OUTPUT)`
+18. <func> `bool GetCommandLineFlagInfo(const char* name, CommandLineFlagInfo* OUTPUT)`
+19. <func> `CommandLineFlagInfo GetCommandLineFlagInfoOrDie(const char* name)`
+20. <enum> `FlagSettingMode`
+21. <func> `std::string SetCommandLineOption (const char* name, const char* value)`
+22. <func> `std::string SetCommandLineOptionWithMode(const char*, const char*, FlagSettingMode)`
+23. <class> `FlagSaver`
+24. <func> `std::string CommandlineFlagsIntoString()`
+25. <func> `bool ReadFlagsFromString(const std::string, const char*, bool)`
+26. <func> `bool AppendFlagsIntoFile(const std::string& filename, const char* prog_name)`
+27. <func> `bool ReadFromFlagsFile(const std::string, const char*, bool)`
+28. <func> `<Type>FromEnv(const char *varname, <type> defval)` 
+29. <func> `void SetUsageMessage(const std::string& usage)`
+30. <func> `void SetVersionString(const std::string& version)`
+31. <func> `uint32 ParseCommandLineFlags(int *argc, char*** argv, bool remove_flags)`
+32. <func> `uint32 ParseCommandLineNonHelpFlags(int *argc, char*** argv, bool remove_flags)`
+33. <func> `void HandleCommandLineHelpFlags()`
+34. <func> `void AllowCommandLineReparsing()`
+35. <func> `void ReparseCommandLineNonHelpFlags()`
+36. <func> `void ShutDownCommandLineFlags()`
+37. <class> `FlagRegisterer`
+38. <macro> `GFLAGS_DECLARE_FLAG_REGISTERER_CTOR`
+39. <data> `const char kStrippedFlagHelp[]`
 
-  `} // namespace GFLAGS_NAMESPACE`
+`} // namespace GFLAGS_NAMESPACE`
 
-  40. <macro> `MAYBE_STRIPPED_HELP`
-  41. <macro> `DEFINE_VARIABLE(type, shorttype, name, value, help)`
-  42. <func> `fLB::IsBoolFlag`
-  43. <macro> `DEFINE_<type>(name, val, txt)`，<type> 有 bool, int32, uint32, int64, uint64, double
-  44. <func> `fLS::dont_pass0toDEFINE_string`
-  45. <class> `flS::StringFlagDestructor`
-  46. <macro> `DEFINE_string(name, val, txt)`
+40. <macro> `MAYBE_STRIPPED_HELP`
+41. <macro> `DEFINE_VARIABLE(type, shorttype, name, value, help)`
+42. <func> `fLB::IsBoolFlag`
+43. <macro> `DEFINE_<type>(name, val, txt)`，<type> 有 bool, int32, uint32, int64, uint64, double
+44. <func> `fLS::dont_pass0toDEFINE_string`
+45. <class> `flS::StringFlagDestructor`
+46. <macro> `DEFINE_string(name, val, txt)`
 
-  `#include "gflags_gflags.h"`
+`#include "gflags_gflags.h"`
 
 - gflags_gflags.h
 
-  这个头文件把 `gflags.h` 中 `namespace GFLAGS_NAMESPACE` 中的接口放在了 `namespcae gflags` 下
+这个头文件把 `gflags.h` 中 `namespace GFLAGS_NAMESPACE` 中的接口放在了 `namespcae gflags` 下
 
 - gflags_declare.h
 
-  `#define GFLAGS_NAMESPACE google`：所以 `gflags.h` 中 `namespace GFLAGS_NAMESPACE` 是 `google`
+`#define GFLAGS_NAMESPACE google`：所以 `gflags.h` 中 `namespace GFLAGS_NAMESPACE` 是 `google`
 
-  47. `namespace GFLAGS_NAMESPACE { int32, uint32, int64, uint64 }`
-  48. <macro> `DECLARE_VARIABLE(type, shorttype, name)`
-  49. <macro>  `DECLARE_<type>(name)`, <type> 包括 bool, int32, uint32, int64, uint64, double, string.
+47. `namespace GFLAGS_NAMESPACE { int32, uint32, int64, uint64 }`
+48. <macro> `DECLARE_VARIABLE(type, shorttype, name)`
+49. <macro>  `DECLARE_<type>(name)`, <type> 包括 bool, int32, uint32, int64, uint64, double, string.
 
 ### gflags 源码实现
 

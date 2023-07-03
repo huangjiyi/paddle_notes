@@ -31,22 +31,22 @@ DEFINE_string(flagfile,   "", "load flags from file");
 - 搜索 `#include "gflags/`，用 113 处用法，其中只有一处是 `#include "gflags/gflags_declare.h"`，其余全是 `#include "gflags/gflags.h"`（`gflags.h` 包含了 `gflags_declare.h`）
 - 搜索 `google::[^(protobuf)]` 有一处 `google::ParseCommandLineFlags` 的用法
 - 搜索 `GFLAGS_NAMESPACE::`，在 27 个文件中有 41 处用法，包括：
-  1. `GFLAGS_NAMESPACE::ParseCommandLineFlags`：23 处
-  2. `GFLAGS_NAMESPACE::GetCommandLineOption`：1 处
-  3. `GFLAGS_NAMESPACE::SetCommandLineOption`：2 处
-  4. `GFLAGS_NAMESPACE::AllowCommandLineReparsing()`：1 处
-  5. `GFLAGS_NAMESPACE::<Type>FromEnv`：4 处
-  6. `GFLAGS_NAMESPACE::(int32|uint32|int64|uint64)`：8 处
-  7. `GFLAGS_NAMESPACE::FlagRegisterer`：2 处
+  - `GFLAGS_NAMESPACE::ParseCommandLineFlags`：23 处
+  - `GFLAGS_NAMESPACE::GetCommandLineOption`：1 处
+  - `GFLAGS_NAMESPACE::SetCommandLineOption`：2 处
+  - `GFLAGS_NAMESPACE::AllowCommandLineReparsing()`：1 处
+  - `GFLAGS_NAMESPACE::<Type>FromEnv`：4 处
+  - `GFLAGS_NAMESPACE::(int32|uint32|int64|uint64)`：8 处
+  - `GFLAGS_NAMESPACE::FlagRegisterer`：2 处
 - 搜索其余命名空间的用法（较少）：
-  1. `fLB::CompileAssert`, `fLB::IsBoolFlag`
-  2. `fLS::clstring`, `fLS::FLAGS_##name`, `fLS::StringFlagDestructor`, `fLS::dont_pass0toDEFINE_string`
+  - `fLB::CompileAssert`, `fLB::IsBoolFlag`
+  - `fLS::clstring`, `fLS::FLAGS_##name`, `fLS::StringFlagDestructor`, `fLS::dont_pass0toDEFINE_string`
 - 搜索 `gflags` 中定义的宏
-  1. `MAYBE_STRIPPED_HELP(`：2 处
-  2. `DEFINE_VARIABLE(`：7 处
-  3. `DEFINE_(bool|int32|uint32|int64|uint64|double|string)`: 202 处
-  4. `DECLARE_VARIABLE`: 7 处
-  5. `DECLARE_(bool|int32|uint32|int64|uint64|double|string)`: 376 处
+  - `MAYBE_STRIPPED_HELP(`：2 处
+  - `DEFINE_VARIABLE(`：7 处
+  - `DEFINE_(bool|int32|uint32|int64|uint64|double|string)`: 202 处
+  - `DECLARE_VARIABLE`: 7 处
+  - `DECLARE_(bool|int32|uint32|int64|uint64|double|string)`: 376 处
 
 #### 用法分析
 
