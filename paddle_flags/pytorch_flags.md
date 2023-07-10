@@ -1,12 +1,12 @@
-### Pytorch flags 实现调研
+## Pytorch flags 实现调研
 
-#### 实现文件
+### 实现文件
 
 - `c10/util/Flags.h`
 - `c10/util/flags_use_gflags.cpp`
 - `c10/util/flags_use_no_gflags.cpp`
 
-#### 实现细节
+### 实现细节
 
 - Pytorch 有一个编译选项 `USE_GFLAGS` 控制是否使用基于 `gflags` 库实现的 `Flags` 功能
 
@@ -18,9 +18,9 @@
 
   就是对 `gflags` 库中的 `(DEFINE|DECLARE)_<type>` 和一些函数接口做了一层包装
 
-#### 不使用 `gflags` 的实现
+### 不使用 `gflags` 的实现
 
-##### c10/util/Flags.h
+#### c10/util/Flags.h
 
 ```C++
 class C10_API C10FlagParser {
@@ -109,7 +109,7 @@ C10_DECLARE_REGISTRY(C10FlagsRegistry, C10FlagParser, const std::string&);
 #define C10_DECLARE_<type>(name) C10_DECLARE_typed_var(<type>, name)
 ```
 
-##### c10/util/flags_use_no_gflags.cpp
+#### c10/util/flags_use_no_gflags.cpp
 
 其他函数的代码都比较简单，这里主要看解析命令行标志的 `C10_EXPORT bool ParseCommandLineFlags(int* pargc, char*** pargv)`：
 

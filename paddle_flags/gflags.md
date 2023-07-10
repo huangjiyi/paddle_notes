@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
 }
 ```
 
-在上面的示例中，我们使用`DEFINE_string`宏定义了一个名为`name`的命令行参数，其默认值为"John"，并提供了一个描述。然后，我们使用`gflags::ParseCommandLineFlags`函数解析命令行参数，并通过`FLAGS_name`访问该参数的值。
+在上面的示例中，我们使用`DEFINE_string`宏定义了一个名为`name`的命令行参数，其默认值为`"John"`，并提供了一个描述。然后，我们使用`gflags::ParseCommandLineFlags`函数解析命令行参数，并通过`FLAGS_name`访问该参数的值。
 
 当你在命令行中运行这个程序时，可以通过`--name`选项指定`name`参数的值：
 
@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
      DEFINE_validator(port, &ValidatePort);
      ```
 
-3. ` gflags::ParseCommandLineFlags(&argc, &argv, true)`
+3. `gflags::ParseCommandLineFlags(&argc, &argv, true)`
 
    - 这个函数告诉可执行文件处理命令行标志，并根据命令行上看到的内容将 `FLAGS_*` 变量设置为适当的非默认值。
 
@@ -181,7 +181,7 @@ int main(int argc, char* argv[]) {
 ```
 
 - 定义 3 个变量的解释是：每个标志有两个与之关联的变量：一个是当前值 `FLAGS_##name`，一个是默认值 `FLAGS_no##name`，然后 gflags 还定义第三个静态常量 `FLAGS_nono##name` ，这样当 `value` 是一个编译时常量时，能够确保 `FLAGS_##name` 在静态初始化阶段（程序启动前）进行初始化，而不是在全局构造阶段（程序启动后，但在 `main` 函数之前）
-- `FLAGS_nono##name` 还有一个作用是：因为默认值的变量是 `FLAGS_no##name`，如果有人在 `<name>` 标志的情况下尝试定义一个 `no<name>` 标志的话，会导致编译报错，因为 bool 类型标志可以在命令行使用 `--no<name>` 设置 `FLAGS_name`  为 `false` ，这样可以避免混淆
+- `FLAGS_nono##name` 还有一个作用是：因为默认值的变量是 `FLAGS_no##name`，如果有人在已经存在 `<name>` 标志的情况下尝试定义一个 `no<name>` 标志的话，会导致编译报错，同时因为 bool 类型标志可以在命令行使用 `--no<name>` 设置 `FLAGS_name`  为 `false` ，这样可以避免混淆
 - 然后定义了一个静态 `FlagRegisterer` 对象，后续深入了解 `FlagRegisterer` 
 - 代码还将标志放置在自己的命名空间中。这个命名空间的名称是有意保持不透明的，这样做的目的是，`DEFINE` 将标志放置在奇怪的命名空间中，而 `DECLARE` 将标志从那个命名空间导入到当前命名空间中。这样做的结果是，强制要求人们使用 `DECLARE` 来访问标志，而不是直接写类似 `extern GFLAGS_DLL_DECL bool FLAGS_whatever;` 这样的代码，这样做是为了可以在DECLARE中添加额外的功能（如检查），并确保它在所有地方都能生效。
 
@@ -479,6 +479,174 @@ class FlagRegistry {
 - `SetFlagLocked(CommandLineFlag* flag, const char* value, FlagSettingMode set_mode, string* msg)`：设置标志的值。根据给定的标志对象、值和设置模式，将标志的值设置为指定的值。如果成功设置标志的值，将在 `msg` 中指示新的标志值，并返回 `true`，否则，将在`msg`中指示错误，保持标志不变，并返回`false`。
 - `GlobalRegistry()`：返回全局注册表对象的单例
 
+### `DEFINE_bool` 实现
+
+``` C++
+// For DEFINE_bool, we want to do the extra check that the passed-in
+// value is actually a bool, and not a string or something that can be
+// coerced to a bool.  These declarations (no definition needed!) will
+// help us do that, and never evaluate From, which is important.
+// We'll use 'sizeof(IsBool(val))' to distinguish. This code requires
+// that the compiler have different sizes for bool & double. Since
+// this is not guaranteed by the standard, we check it with a
+// COMPILE_ASSERT.
+namespace fLB {
+struct CompileAssert {};
+typedef CompileAssert expected_sizeof_double_neq_sizeof_bool[
+                      (sizeof(double) != sizeof(bool)) ? 1 : -1];
+template<typename From> double GFLAGS_DLL_DECL IsBoolFlag(const From& from);
+GFLAGS_DLL_DECL bool IsBoolFlag(bool from);
+}  // namespace fLB
+
+// Here are the actual DEFINE_*-macros. The respective DECLARE_*-macros
+// are in a separate include, gflags_declare.h, for reducing
+// the physical transitive size for DECLARE use.
+#define DEFINE_bool(name, val, txt)                                     \
+  namespace fLB {                                                       \
+    typedef ::fLB::CompileAssert FLAG_##name##_value_is_not_a_bool[     \
+            (sizeof(::fLB::IsBoolFlag(val)) != sizeof(double))? 1: -1]; \
+  }                                                                     \
+  DEFINE_VARIABLE(bool, B, name, val, txt)
+```
+
+- 注释的意思是这段代码的目的是为了确保传入的值是布尔类型，而不是其他类型；其中用到的类型和函数声明的作用是帮助实现对传入值的类型检查，而无需实际定义；代码使用`sizeof(IsBoolFlag(val))`来区分传入值的类型，要求编译器对布尔类型和双精度类型（double）有不同的大小，因此使用COMPILE_ASSERT来进行检查，确保编译器满足这一要求。
+
+- 这段代码首先定义了一个空的结构体：`struct CompileAssert {}`，主要作用是作为一个占位符
+
+- 然后定义了一个 `CompileAssert` 数组的别名 `expected_sizeof_double_neq_sizeof_bool`，数组的大小由 `(sizeof(double) != sizeof(bool)) ? 1 : -1` 确定，这样做是为了在编译时检查`double`类型和`bool`类型的大小是否相等，因为编译器会检查数组类型的大小是否为负。
+
+  > - 条件表达式`(sizeof(double) != sizeof(bool)) ? 1 : -1`的结果在编译时是已知的
+  >
+  > - 类似简单的例子：
+  >
+  >   ```C++
+  >   typedef int int_array[8];
+  >   int_array arr;
+  >   arr[0] = 1;
+  >   ```
+  >
+  >   上面的代码将 int_array 定义成长度为 8 的 int 数组类型，然后 gflags 的代码则是将 expected_sizeof_double_neq_sizeof_bool 定义成长度为 `(sizeof(double) != sizeof(bool)) ? 1 : -1` 的 `CompileAssert` 数组类型
+
+- 然后定义了一个模板函数 `IsBoolFlag`，当输入数据为 bool 类型时返回 bool 类型，输入其他类型时返回 double 类型，这个函数用于在 `DEFINE_BOOL` 中判断输入数据的类型是否为 `bool`，如果不是的话会和上面的代码一样编译时报错
+
+- `DEFINE_bool` 相比于其他普通类型的区别就在于上面说的一些检查
+
+### `DEFINE_string` 实现
+
+``` C++
+// Strings are trickier, because they're not a POD, so we can't
+// construct them at static-initialization time (instead they get
+// constructed at global-constructor time, which is much later).  To
+// try to avoid crashes in that case, we use a char buffer to store
+// the string, which we can static-initialize, and then placement-new
+// into it later.  It's not perfect, but the best we can do.
+
+namespace fLS {
+
+inline clstring* dont_pass0toDEFINE_string(char *stringspot,
+                                           const char *value) {
+  return new(stringspot) clstring(value);
+}
+inline clstring* dont_pass0toDEFINE_string(char *stringspot,
+                                           const clstring &value) {
+  return new(stringspot) clstring(value);
+}
+inline clstring* dont_pass0toDEFINE_string(char *stringspot,
+                                           int value);
+
+// Auxiliary class used to explicitly call destructor of string objects
+// allocated using placement new during static program deinitialization.
+// The destructor MUST be an inline function such that the explicit
+// destruction occurs in the same compilation unit as the placement new.
+class StringFlagDestructor {
+  void *current_storage_;
+  void *defvalue_storage_;
+
+public: 
+
+  StringFlagDestructor(void *current, void *defvalue)
+  : current_storage_(current), defvalue_storage_(defvalue) {}
+
+  ~StringFlagDestructor() {
+    reinterpret_cast<clstring*>(current_storage_ )->~clstring();
+    reinterpret_cast<clstring*>(defvalue_storage_)->~clstring();
+  }
+};
+
+}  // namespace fLS
+
+// We need to define a var named FLAGS_no##name so people don't define
+// --string and --nostring.  And we need a temporary place to put val
+// so we don't have to evaluate it twice.  Two great needs that go
+// great together!
+// The weird 'using' + 'extern' inside the fLS namespace is to work around
+// an unknown compiler bug/issue with the gcc 4.2.1 on SUSE 10.  See
+//    http://code.google.com/p/google-gflags/issues/detail?id=20
+#define DEFINE_string(name, val, txt)                                       \
+  namespace fLS {                                                           \
+    using ::fLS::clstring;                                                  \
+    using ::fLS::StringFlagDestructor;                                      \
+    static union { void* align; char s[sizeof(clstring)]; } s_##name[2];    \
+    clstring* const FLAGS_no##name = ::fLS::                                \
+                                   dont_pass0toDEFINE_string(s_##name[0].s, \
+                                                             val);          \
+    static GFLAGS_NAMESPACE::FlagRegisterer o_##name(                       \
+        #name, MAYBE_STRIPPED_HELP(txt), __FILE__,                          \
+        FLAGS_no##name, new (s_##name[1].s) clstring(*FLAGS_no##name));     \
+    static StringFlagDestructor d_##name(s_##name[0].s, s_##name[1].s);     \
+    extern GFLAGS_DLL_DEFINE_FLAG clstring& FLAGS_##name;                   \
+    using fLS::FLAGS_##name;                                                \
+    clstring& FLAGS_##name = *FLAGS_no##name;                               \
+  }                                                                         \
+  using fLS::FLAGS_##name
+
+#endif  // SWIG
+```
+
+- 第一段注释说字符串不是一个 POD（Plain Old Data）类型，无法在静态初始化时构造它们（而是在全局构造函数时进行构造，这是一个更晚的时机），为了尽量避免在这种情况下出现崩溃，gflags 使用一个字符缓冲区来存储字符串，在静态初始化时进行初始化，并稍后用 placement-new 存放字符串，这不是完美的解决方案，但却是能做到的最好的方式
+- 首先代码定义了 3 个 `dont_pass0toDEFINE_string` 函数，用 placement new 的方式将 `value` 字符串放在 `stringspot` 指向的空间中，第三个函数没有实现可能是不需要处理 `int` 类型的 `value` 参数
+- `StringFlagDestructor` 就是一个析构字符串的辅助类
+- 在 `DEFINE_string` 中，首先定义了一个静态联合体数组 `s_##name[2]`，其中 align 好像没用，s 用来存放字符串，并且会在静态初始化阶段分配空间，然后调用 `dont_pass0toDEFINE_string` 函数通过 `new(s_##name[0].s) clstring(val)` 的方式将 `val` 存放在 `s_##name[0].s`，同时返回指向 `s_##name[0].s` 的 `clstring` 类型指针，并且用一个指针常量 `FLAGS_no##name` 接收，表示字符串标志的默认值，因为 `val` 是编译时常量，上述过程都在静态初始化阶段进行
+- 然后定义了一个 `FlagRegisterer` 注册了一个 string 类型的 flag
+- `clstring& FLAGS_##name = *FLAGS_no##name`
+
+### `DECLARE_<type>` 实现
+
+``` C++
+#define DECLARE_VARIABLE(type, shorttype, name) \
+  /* We always want to import declared variables, dll or no */ \
+  namespace fL##shorttype { extern GFLAGS_DLL_DECLARE_FLAG type FLAGS_##name; } \
+  using fL##shorttype::FLAGS_##name
+
+#define DECLARE_bool(name) \
+  DECLARE_VARIABLE(bool, B, name)
+
+#define DECLARE_int32(name) \
+  DECLARE_VARIABLE(::GFLAGS_NAMESPACE::int32, I, name)
+
+#define DECLARE_uint32(name) \
+  DECLARE_VARIABLE(::GFLAGS_NAMESPACE::uint32, U, name)
+
+#define DECLARE_int64(name) \
+  DECLARE_VARIABLE(::GFLAGS_NAMESPACE::int64, I64, name)
+
+#define DECLARE_uint64(name) \
+  DECLARE_VARIABLE(::GFLAGS_NAMESPACE::uint64, U64, name)
+
+#define DECLARE_double(name) \
+  DECLARE_VARIABLE(double, D, name)
+
+#define DECLARE_string(name) \
+  /* We always want to import declared variables, dll or no */ \
+  namespace fLS { \
+  extern GFLAGS_DLL_DECLARE_FLAG ::fLS::clstring& FLAGS_##name; \
+  } \
+  using fLS::FLAGS_##name
+
+```
+
+- 比较简单，就是 extern 用法
+
 ### `ParseCommandLineFlags` 实现
 
 ```C++
@@ -623,3 +791,134 @@ class CommandLineFlagParser {
   - `--fromenv`：从环境变量中设置标志，接受一个环境变量名作为值，用于指定要读取的环境变量，并将其值用于设置相应的标志。
   - `--tryfromenv`：尝试从环境变量中设置标志，与`--fromenv`类似，但不会引发错误，如果环境变量不存在，则不会设置标志。
   - `--undefok`：指定在命令行中指定某些未定义的标志名是允许的，接受一个逗号分隔的标志名称列表作为值。当程序未定义某个标志但在命令行中指定了该标志名时，该标志将被视为有效。注意，该列表中的具有参数的标志必须使用`flag=value`的格式，私有成员 `undefined_names_` 与这个相关
+
+### 其他接口实现
+
+下面介绍的接口用法不多，并且基本都是围绕上面介绍的一些数据结构实现的
+
+#### `GetCommandLineOption`
+
+用于获取 FLAG 的值，FLAG 存在返回 true，并将 FLAGG 的值赋给 OUTPUT；否则返回 false
+
+``` C++
+bool GetCommandLineOption(const char* name, string* value) {
+  if (NULL == name)
+    return false;
+  assert(value);
+
+  FlagRegistry* const registry = FlagRegistry::GlobalRegistry();
+  FlagRegistryLock frl(registry);
+  CommandLineFlag* flag = registry->FindFlagLocked(name);
+  if (flag == NULL) {
+    return false;
+  } else {
+    *value = flag->current_value();
+    return true;
+  }
+}
+```
+
+#### `SetCommandLineOption `
+
+- 将 `value` 赋值给 `FLAGS_name`，并返回一个描述字符串，如果返回字符串为空表示 `FLAGS_name` 不存在，或者 `value` 不是有效的
+
+``` C++
+string SetCommandLineOptionWithMode(const char* name, const char* value,
+                                    FlagSettingMode set_mode) {
+  string result;
+  FlagRegistry* const registry = FlagRegistry::GlobalRegistry();
+  FlagRegistryLock frl(registry);
+  CommandLineFlag* flag = registry->FindFlagLocked(name);
+  if (flag) {
+    CommandLineFlagParser parser(registry);
+    result = parser.ProcessSingleOptionLocked(flag, value, set_mode);
+    if (!result.empty()) {   // in the error case, we've already logged
+      // Could consider logging this change
+    }
+  }
+  // The API of this function is that we return empty string on error
+  return result;
+}
+
+string SetCommandLineOption(const char* name, const char* value) {
+  return SetCommandLineOptionWithMode(name, value, SET_FLAGS_VALUE);
+}
+```
+
+#### `AllowCommandLineReparsing`
+
+- 允许命令行重新解析，静态变量 `allow_command_line_reparsing` 会初始化为 `false`，这个标记变量只在 `CommandLineFlagParser::ReportErrors()` 中用到，这个函数用于记录错误的 flags
+
+``` C++
+void AllowCommandLineReparsing() {
+  allow_command_line_reparsing = true;
+}
+```
+
+#### `<Type>FromEnv`
+
+- 获取环境变量
+
+``` C++
+template<typename T>
+T GetFromEnv(const char *varname, T dflt) {
+  std::string valstr;
+  if (SafeGetEnv(varname, valstr)) {
+    FlagValue ifv(new T, true);
+    if (!ifv.ParseFrom(valstr.c_str())) {
+      ReportError(DIE, "ERROR: error parsing env variable '%s' with value '%s'\n",
+                  varname, valstr.c_str());
+    }
+    return OTHER_VALUE_AS(ifv, T);
+  } else return dflt;
+}
+
+bool BoolFromEnv(const char *v, bool dflt) {
+  return GetFromEnv(v, dflt);
+}
+int32 Int32FromEnv(const char *v, int32 dflt) {
+  return GetFromEnv(v, dflt);
+}
+uint32 Uint32FromEnv(const char *v, uint32 dflt) {
+  return GetFromEnv(v, dflt);
+}
+int64 Int64FromEnv(const char *v, int64 dflt)    {
+  return GetFromEnv(v, dflt);
+}
+uint64 Uint64FromEnv(const char *v, uint64 dflt) {
+  return GetFromEnv(v, dflt);
+}
+double DoubleFromEnv(const char *v, double dflt) {
+  return GetFromEnv(v, dflt);
+}
+
+#ifdef _MSC_VER
+#  pragma warning(push)
+#  pragma warning(disable: 4996) // ignore getenv security warning
+#endif
+const char *StringFromEnv(const char *varname, const char *dflt) {
+  const char* const val = getenv(varname);
+  return val ? val : dflt;
+}
+#ifdef _MSC_VER
+#  pragma warning(pop)
+#endif
+
+// util.h
+inline bool SafeGetEnv(const char *varname, std::string &valstr)
+{
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+	char  *val;
+	size_t sz;
+	if (_dupenv_s(&val, &sz, varname) != 0 || !val) return false;
+	valstr = val;
+	free(val);
+#else
+	const char * const val = getenv(varname);
+	if (!val) return false;
+	valstr = val;
+#endif
+	return true;
+}
+```
+
