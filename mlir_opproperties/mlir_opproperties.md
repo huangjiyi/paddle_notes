@@ -129,7 +129,7 @@ public:
 };
 ```
 
-以 mlir/unittests/IR/OpPropertiesTest.cpp 为例，如同 `TestProperties`，Properties 就是包含一系列数据的的简单结构体，在定义 Op 时需要使用 `using Properties = TestProperties;` 或者直接在 class Op 中定义 `TestProperties` 来指定 Op Properties。
+以 mlir/unittests/IR/OpPropertiesTest.cpp 为例，如同 `TestProperties`，Properties 就是包含一系列数据的的简单结构体，在定义 Op 时需要使用 `using Properties = TestProperties;` 或者直接在 class Op 中定义 `Properties`。
 
 另外还需要定义 Properties 和 Attributes 转换相关的函数等等，这部分代码可以使用代码自动生成实现。
 
