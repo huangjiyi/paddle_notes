@@ -18,11 +18,13 @@ op 的 properties 和 attributes 都是属性的意思，properties 代替了之
 
 ``` C++
 class Operation {
+    ...
     DictionaryAttr attrs;
+    ...
 }
 ```
 
-Op 有一个 attribute 字典数据成员，原本在 MLIR 中，其中的 attribute 可以分为 2 种类型：inherent attributes 和 discardable attributes：
+Operation 有一个 DictionaryAttr 数据成员用来访问和操作 attributes，在原本的 MLIR 中，其中的 attributes 可以分为 2 种类型：inherent attributes 和 discardable attributes：
 
 - inherent attributes 是 op 固有的 attributes，其语义只与 op 相关联，inherent attributes 没有 dialect 前缀
 
@@ -36,17 +38,17 @@ Op 有一个 attribute 字典数据成员，原本在 MLIR 中，其中的 attri
 
 ![image-20240314124315810](./images/image-20240314124315810.png)
 
-如上图所示，MILR 的所有 attributes 的 storage 指针都由 `MLIRContext` 中的 `attributeUniquer` 进行管理，其中每个 Attribute 类型有对应的 `ParametricStorageUniquer` 管理该类型 attribute 的 storage，而 attribute 实例只是对 attibute storage 指针的封装。
+如上图所示，MILR 的所有 attribute 的 storage 指针都由 `MLIRContext` 中的 `attributeUniquer` 进行管理，其中每个 Attribute 类型有对应的 `ParametricStorageUniquer` 管理该类型 attribute 的 storage，而 attribute 实例只是对 attibute storage 指针的封装。
 
 - Attribute 的创建
 
-如果需要构建一个指定 storage 的 attribute，其中涉及了 content-based hashing 操作，以及 attribute storage 的拷贝操作，下图是一个示例说明，实际代码更加复杂。
+如果需要构建一个指定 storage 的 attribute，其中涉及了 content-based hashing 操作，以及 attribute storage 的拷贝操作，下图是一个示例说明，实际用法更加复杂。
 
 ![image-20240314132614295](./images/image-20240314132614295.png)
 
 - Op attributes 的修改
 
-如果需要修改 op 的 attributes，具有代码如下：
+如果需要修改 op 的 attributes，相关代码如下：
 
 ``` C++
 void setAttr(StringAttr name, Attribute value) {
