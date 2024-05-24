@@ -80,7 +80,7 @@ def verify_shared_ops_consistency(
 def verify_consistency(
     dygraph_yaml_file, static_yaml_file, save_dir, backward=False
 ):
-    os.makedirs(save_dir, exist_ok=True)
+    # os.makedirs(save_dir, exist_ok=True)
     print(
         "Verify consistency for "
         + ("forward" if not backward else "backward")
